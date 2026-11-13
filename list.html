@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>已借用設備清單</title>
+<style>
+body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f8f9fa; margin: 0; }
+.container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.btn { padding: 10px 15px; font-size: 16px; border-radius: 6px; width: 100%; max-width: 320px; box-sizing: border-box; cursor: pointer; border: none; font-weight: bold; margin-bottom: 15px; }
+.btn-back { background-color: #6c757d; color: white; text-decoration: none; display: inline-block; text-align: center; }
+.btn-refresh { background-color: #17a2b8; color: white; }
+table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+th { background-color: #f2f2f2; font-weight: bold; }
+.badge-borrowed { background-color: #dc3545; color: white; padding: 4px 8px; border-radius: 12px; font-size: 13px; font-weight: bold; }
+#status { font-weight: bold; color: #555; margin-top: 15px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h2>📋 已借用設備清單</h2>
+<!-- 返回主掃描頁面的按鈕 -->
+<a href="index.html" class="btn btn-back">⬅️ 返回掃描介面</a>
+<br>
+<button class="btn btn-refresh" onclick="loadBorrowedList()">🔄 重新整理清單</button>
+
+<div id="status">載入中...</div>
+<table id="borrowed-table" style="display: none;">
+<thead>
+<tr>
+<th>編號</th>
+<th>廠牌</th>
+<th>設備名稱</th>
+<th>狀態</th>
+</tr>
+</thead>
+<tbody id="borrowed-list-body"></tbody>
+</table>
+</div>
+
+<script>
+// ★★★ 請替換成您的 GAS 網頁應用程式網址 ★★★
+const API_URL = "https://script.google.com/macros/s/AKfycbxZ07dvUZjplKtB-SiOASkP7B6tk-bMbV21dQNBKiSnYnlLuPUE0iR0CF3fhfTM3oz7Yg/exec";
+
+async function loadBorrowedList() {
+const statusDiv = document.getElementById('status');
+const table = document.getElementById('borrowed-table');
+const tbody = document.getElementById('borrowed-list-body');
+statusDiv.style.display = "block";
+statusDiv.innerText = "讀取資料中，請稍候...";
+table.style.display = "none";
+tbody.innerHTML = "";
+
+try {
+const response = await fetch(`${API_URL}?action=getList`);
+const list = await response.json();
+
+if (list.length === 0) {
+statusDiv.innerText = "目前沒有任何設備被借出。";
+} else {
+statusDiv.style.display = "none";
+table.style.display = "table";
+list.forEach(item => {
+const tr = document.createElement('tr');
+tr.innerHTML = `
+<td>${item.id}</td>
+<td>${item.brand || '-'}</td>
+<td>${item.name || '-'}</td>
+<td><span class="badge-borrowed">${item.status}</span></td>
+`;
+tbody.appendChild(tr);
+});
+}
+} catch (error) {
+console.error("無法取得清單:", error);
+statusDiv.innerText = "無法讀取清單！請確認網頁應用程式部署設定與權限。";
+}
+}
+
+// 開啟頁面自動載入
+loadBorrowedList();
+</script>
+</body>
+</html>
